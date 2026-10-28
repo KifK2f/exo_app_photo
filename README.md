@@ -45,7 +45,7 @@ Le projet a été réalisé comme exercice du cours *Flutter & Dart - L'essentie
 ## 📷 Aperçu de l'application
 
 <p align="center">
-  <img src="screenshots/ExoAppPhotoImage1.jpeg" alt="Ecran 1" width="250">
+  <img src="screenshots/ExoAppPhotoImage.png" alt="Ecran" width="250">
 </p>
 
 ## 🚀 Installation et exécution

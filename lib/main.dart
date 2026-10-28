@@ -1,9 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-//Import des packages
 import 'package:image_picker/image_picker.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -19,7 +18,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
-        colorScheme: .fromSeed(seedColor: Colors.green),
+        colorScheme: .fromSeed(seedColor: Colors.white),
       ),
       home: const MyHomePage(title: 'Mes photos'),
     );
@@ -36,85 +35,96 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  List<File> _images = []; //Un liste de File qui sera non optionnelle
+  int _index = 0;
 
-  File? _file;
-
-  Future<void> _pickImage(ImageSource source) async {
-    XFile? xFile = await ImagePicker().pickImage(source: source);
+  Future<void> _pickImage({required ImageSource source}) async {
+    ImagePicker picker = ImagePicker();
+    XFile? xFile = await picker.pickImage(source: source);
     if (xFile != null){
       setState(() {
         String path = xFile.path;
-        _file = File(path);
+        File? file = File(path);
+        if (file != null){
+          _images.add(file);
+        }
       });
     }
   }
 
+  void _removePicture(File file){
+    setState(() {
+      _images.remove(file);
+    });
+  }
+
+  void _updateIndex(File file){
+    setState(() {
+      _index = _images.indexOf(file);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final Size size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        centerTitle: true,
+        backgroundColor: Colors.green,
         title: Text(widget.title),
-        actionsPadding: const EdgeInsets.all(8),
+        centerTitle: true,
         actions: [
           IconButton(
-              onPressed: (() => _pickImage(ImageSource.gallery)),
-              icon: const FaIcon(FontAwesomeIcons.photoFilm, color: Colors.blue,)
+              onPressed: () => _pickImage(source: ImageSource.gallery),
+              icon: const Icon(Icons.photo_album)
+          ),
+          IconButton(
+              onPressed: () => _pickImage(source: ImageSource.camera),
+              icon: const Icon(Icons.camera_alt)
           ),
 
-          IconButton(
-              onPressed: (() => _pickImage(ImageSource.camera)),
-              icon: const FaIcon(FontAwesomeIcons.camera,  color: Colors.blue)
-          ),
         ],
       ),
-      body: Center(
+      body: SingleChildScrollView(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: .center,
           children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 50,
-                    // backgroundImage: Image.file(_file),
-                  ),
-                  CircleAvatar(
-                    radius: 50,
-                    // backgroundImage: Image.file(_file),
-                  ),
-
-                ],
+            SizedBox(
+              height: 128,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: _images.map((img){
+                    return InkWell(
+                      onTap: (() => _updateIndex(img)),
+                      onLongPress: (()=> _removePicture(img)),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: CircleAvatar(
+                          radius: 54,
+                          backgroundImage: FileImage(img),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
-            _file != null
-                ? Image.file(_file!)
-                :FlutterLogo(
-              size: MediaQuery.of(context).size.width * 0.8,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                IconButton(
-                    onPressed: (() => _pickImage(ImageSource.camera)),
-                    icon: const FaIcon(FontAwesomeIcons.camera,  color: Colors.blue)
-                ),
-                IconButton(
-                    onPressed: (() => _pickImage(ImageSource.camera)),
-                    icon: const FaIcon(FontAwesomeIcons.cameraRetro,  color: Colors.blue)
-                ),
-                IconButton(
-                    onPressed: (() => _pickImage(ImageSource.gallery)),
-                    icon: const FaIcon(FontAwesomeIcons.photoFilm, color: Colors.blue,)
-                ),
-              ],
+
+            Divider(),
+            Card(
+              clipBehavior: Clip.antiAlias, //  Pour que les contour de l'image épouse bien les arrondis de la Card
+              margin: const EdgeInsets.all(16),
+              child: Container(
+                  height: size.width * 0.7,
+                  width : size.width * 0.7,
+                  child: (_images.isNotEmpty && _images.length > _index)
+                      ? Image.file(_images[_index], fit: BoxFit.cover,)
+                      : SizedBox(height: size.width * 0.7,)
+              ),
             )
           ],
         ),
       ),
-
     );
   }
 }
